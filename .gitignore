@@ -1,0 +1,26 @@
+.env
+.env.local
+node_modules/
+dist/
+
+# ─── Terraform ───────────────────────────────────────────────
+# El "state" describe tu infra real (IPs, IDs). NUNCA va a git.
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+# Los .tfvars llevan datos de tu proyecto. Solo subimos el .example
+*.tfvars
+!*.tfvars.example
+
+# ─── SSH ─────────────────────────────────────────────────────
+*.pem
+id_rsa
+id_ed25519

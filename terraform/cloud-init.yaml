@@ -1,0 +1,43 @@
+#cloud-config
+# ══════════════════════════════════════════════════════════════════
+#  LA "LÍNEA DE CONTRATO" — este archivo es IDÉNTICO en toda nube.
+#
+#  Toma una VM Ubuntu recién nacida (Google, DigitalOcean, AWS, Azure)
+#  y la deja lista para correr contenedores Docker. Como Docker corre
+#  igual en cualquier Linux, todo lo que va encima de esto es portable.
+#
+#  Cambiar de nube NO toca este archivo. (patrón heredado de Polaris)
+# ══════════════════════════════════════════════════════════════════
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - git
+  # SSH queda expuesto a Internet (runners CI no tienen IP fija).
+  # fail2ban banea la IP tras varios intentos fallidos de login.
+  - fail2ban
+
+# Sin contraseñas en SSH: solo llave pública.
+ssh_pwauth: false
+disable_root: true
+
+runcmd:
+  # ── Instalar Docker Engine + plugin de Compose (repo oficial Docker) ──
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable" > /etc/apt/sources.list.d/docker.list
+  - apt-get update
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+  # ── El usuario 'deploy' usa docker sin sudo (NO trabajamos como root) ──
+  - usermod -aG docker deploy
+  - systemctl enable --now docker
+
+  # ── Carpeta donde vivirá la app (worker sports-sync + Redis) ──
+  - mkdir -p /app/pronostico
+  - chown -R deploy:deploy /app

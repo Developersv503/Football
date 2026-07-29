@@ -1,0 +1,11 @@
+# Copia a  terraform.tfvars  y rellena. El .tfvars real NO va a git.
+
+project_id          = "pronostico-XXXXXXXX"   # proyecto GCP separado de Polaris
+region              = "us-central1"
+zone                = "us-central1-a"
+machine_type        = "e2-small"
+ssh_user            = "deploy"
+ssh_public_key_path = "~/.ssh/id_ed25519.pub"
+
+# Sin CI/CD todavía → restringí a tu IP real, ej: ["190.10.20.30/32"]
+ssh_source_ranges = ["TU_IP_AQUI/32"]
