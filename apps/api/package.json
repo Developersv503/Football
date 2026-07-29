@@ -1,0 +1,37 @@
+{
+  "name": "@pronostico/api",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "nest start --watch",
+    "build": "nest build",
+    "start": "node dist/main",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/helmet": "^13.0.2",
+    "@nestjs/common": "^11.1.21",
+    "@nestjs/core": "^11.1.21",
+    "@nestjs/jwt": "^10.2.0",
+    "@nestjs/platform-fastify": "^11.1.21",
+    "@nestjs/swagger": "^11.4.3",
+    "@pronostico/db": "*",
+    "@prisma/client": "^6.3.0",
+    "bcryptjs": "^3.0.2",
+    "ioredis": "^5.6.0",
+    "nestjs-pino": "^4.4.0",
+    "pino-http": "^10.4.0",
+    "pino-pretty": "^13.0.0",
+    "reflect-metadata": "^0.2.2",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.21",
+    "@nestjs/schematics": "^11.1.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  }
+}

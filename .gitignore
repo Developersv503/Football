@@ -2,6 +2,9 @@
 .env.local
 node_modules/
 dist/
+packages/db/generated/
+.turbo/
+*.tsbuildinfo
 
 # ─── Terraform ───────────────────────────────────────────────
 # El "state" describe tu infra real (IPs, IDs). NUNCA va a git.

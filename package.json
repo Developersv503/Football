@@ -1,0 +1,33 @@
+{
+  "name": "pronostico",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "npm@11.6.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:api": "turbo run dev --filter=@pronostico/api",
+    "dev:sync": "turbo run dev --filter=@pronostico/sports-sync",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "db:generate": "turbo run db:generate --filter=@pronostico/db",
+    "db:push": "turbo run db:push --filter=@pronostico/db"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.0",
+    "prisma": "^6.3.0",
+    "turbo": "^2.5.0",
+    "typescript": "^5.8.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.3.0"
+  }
+}
