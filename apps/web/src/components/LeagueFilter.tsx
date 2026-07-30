@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import type { CompetitionOption } from '@/lib/api'
 
@@ -8,6 +8,11 @@ import type { CompetitionOption } from '@/lib/api'
  * Filtro de ligas. El estado vive en la URL (`?liga=`) y no en el
  * componente: así el filtro sobrevive a un refresh, se puede compartir por
  * link, y el listado se sigue renderizando en el servidor.
+ *
+ * El re-render del servidor puede tardar varios segundos (la API en Hobby
+ * se enfría entre requests) — sin `isPending` el click no muestra nada
+ * hasta que termina y se siente roto. `useTransition` da el feedback
+ * inmediato aunque la navegación en sí siga tardando lo mismo.
  */
 export function LeagueFilter({
   competitions,
@@ -18,6 +23,8 @@ export function LeagueFilter({
 }) {
   const router = useRouter()
   const [query, setQuery] = useState('')
+  const [isPending, startTransition] = useTransition()
+  const [pendingId, setPendingId] = useState<string | null>(null)
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -28,13 +35,16 @@ export function LeagueFilter({
   }, [competitions, query])
 
   function pick(id: string | null) {
-    router.push(id ? `/?liga=${encodeURIComponent(id)}` : '/')
+    setPendingId(id)
+    startTransition(() => {
+      router.push(id ? `/?liga=${encodeURIComponent(id)}` : '/')
+    })
   }
 
   const selectedName = competitions.find((c) => c.id === selected)?.name
 
   return (
-    <div className="league-filter">
+    <div className={`league-filter${isPending ? ' is-pending' : ''}`}>
       <div className="league-filter-head">
         <input
           className="league-search"
@@ -45,7 +55,7 @@ export function LeagueFilter({
           aria-label="Buscar liga o país"
         />
         {selected ? (
-          <button type="button" className="league-clear" onClick={() => pick(null)}>
+          <button type="button" className="league-clear" disabled={isPending} onClick={() => pick(null)}>
             Quitar filtro: {selectedName ?? 'liga'} ✕
           </button>
         ) : null}
@@ -54,18 +64,22 @@ export function LeagueFilter({
       <div className="league-chips">
         <button
           type="button"
-          className={`league-chip${selected ? '' : ' active'}`}
+          disabled={isPending}
+          className={`league-chip${selected ? '' : ' active'}${isPending && pendingId === null ? ' loading' : ''}`}
           onClick={() => pick(null)}
         >
+          {isPending && pendingId === null ? <span className="league-chip-spinner" /> : null}
           Todas
         </button>
         {visible.map((c) => (
           <button
             type="button"
             key={c.id}
-            className={`league-chip${selected === c.id ? ' active' : ''}`}
+            disabled={isPending}
+            className={`league-chip${selected === c.id ? ' active' : ''}${isPending && pendingId === c.id ? ' loading' : ''}`}
             onClick={() => pick(c.id)}
           >
+            {isPending && pendingId === c.id ? <span className="league-chip-spinner" /> : null}
             {c.country ? <span className="league-chip-country">{c.country}</span> : null}
             {c.name}
             <span className="league-chip-count tnum">{c.eventCount}</span>
