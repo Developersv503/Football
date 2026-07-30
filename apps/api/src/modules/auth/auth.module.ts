@@ -9,7 +9,9 @@ import { AuthController } from './auth.controller'
     JwtModule.registerAsync({
       useFactory: () => ({
         secret: getEnv().JWT_ACCESS_SECRET,
-        signOptions: { expiresIn: getEnv().JWT_ACCESS_EXPIRES },
+        // @nestjs/jwt 11 tipa expiresIn como el literal `StringValue` de `ms`;
+        // la env var ya está validada en runtime por Zod, solo falta el cast.
+        signOptions: { expiresIn: getEnv().JWT_ACCESS_EXPIRES as `${number}${'s' | 'm' | 'h' | 'd'}` },
       }),
     }),
   ],

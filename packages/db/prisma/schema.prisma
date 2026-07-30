@@ -4,8 +4,12 @@
 // en vez de recalcularse con COUNT/aggregate en caliente.
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/client"
+  provider      = "prisma-client-js"
+  output        = "../generated/client"
+  // native = dev en Windows/local; rhel-openssl-3.0.x = runtime real de las
+  // funciones serverless de Vercel (Amazon Linux). Sin este segundo target
+  // el cliente generado en Windows no arranca una vez desplegado.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
