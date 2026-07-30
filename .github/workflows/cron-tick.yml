@@ -1,0 +1,32 @@
+# Tick horario de sync + liquidación.
+#
+# El plan Hobby de Vercel limita los Cron Jobs a una corrida diaria, lo cual
+# deja los resultados en vivo y la liquidación de torneos con hasta 24h de
+# atraso. Este workflow pega al mismo endpoint cada hora, gratis. El cron de
+# vercel.json queda como red de seguridad diaria.
+#
+# Requiere el secret de repo CRON_SECRET con el mismo valor que la env var
+# CRON_SECRET del proyecto pronostico-api en Vercel.
+name: cron-tick
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar sync + liquidación
+        run: |
+          response=$(curl -sS -w '\n%{http_code}' \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://pronostico-api.vercel.app/api/internal/cron/tick)
+          body=$(echo "$response" | head -n -1)
+          status=$(echo "$response" | tail -n 1)
+          echo "$body"
+          if [ "$status" != "200" ]; then
+            echo "::error::El tick devolvió HTTP $status"
+            exit 1
+          fi
