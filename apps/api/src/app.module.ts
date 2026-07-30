@@ -13,6 +13,7 @@ import { PredictionsModule } from './modules/predictions/predictions.module'
 import { TournamentsModule } from './modules/tournaments/tournaments.module'
 import { PredictorProfilesModule } from './modules/predictor-profiles/predictor-profiles.module'
 import { AdminModule } from './modules/admin/admin.module'
+import { CronModule } from './modules/cron/cron.module'
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AdminModule } from './modules/admin/admin.module'
     TournamentsModule,
     PredictorProfilesModule,
     AdminModule,
+    CronModule,
   ],
   providers: [
     // Orden importa: rate-limit primero (barato, corta floods antes de tocar

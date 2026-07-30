@@ -19,6 +19,9 @@ const envSchema = z.object({
   REDIS_URL: z.string().default('redis://localhost:6379'),
 
   DOCS_API_KEY: z.string().min(16).optional(),
+
+  SPORTRADAR_API_KEY: z.string().optional(),
+  CRON_SECRET: z.string().min(16).optional(),
 })
 
 export type Env = z.infer<typeof envSchema>
