@@ -98,7 +98,50 @@ export class SportsSyncService {
     }
 
     this.logger.log(`Sync: ${synced} eventos en ${competitionCache.size} competiciones.`)
+    await this.backfillMissingCountries(apiKey)
     return { synced, competitions: competitionCache.size }
+  }
+
+  /**
+   * Una competición solo recibe país cuando aparece en el sync del día
+   * (ver arriba) — si esa liga no tiene fixtures hoy, se queda con lo que
+   * ya tenía guardado, aunque sea null (p. ej. quedó null antes del fix del
+   * bug de arriba, o se creó un día sin partidos de esa liga). Este paso
+   * usa el catálogo completo de Sportradar, que sí trae el país en cada
+   * competición sin depender de si tiene partidos hoy, y rellena solo lo
+   * que falta.
+   */
+  private async backfillMissingCountries(apiKey: string): Promise<void> {
+    const missing = await this.prisma.competition.findMany({
+      where: { country: null },
+      select: { id: true, sportradarId: true },
+    })
+    if (missing.length === 0) return
+
+    let catalog: any[]
+    try {
+      const data = await this.fetchJson(
+        `https://api.sportradar.com/soccer/trial/v4/en/competitions.json?api_key=${apiKey}`,
+      )
+      catalog = data.competitions ?? []
+    } catch (err) {
+      this.logger.warn(`No se pudo traer el catálogo para el backfill de país: ${(err as Error).message}`)
+      return
+    }
+
+    const countryById = new Map<string, string>()
+    for (const comp of catalog) {
+      if (comp.category?.name) countryById.set(comp.id, comp.category.name)
+    }
+
+    let updated = 0
+    for (const comp of missing) {
+      const country = countryById.get(comp.sportradarId)
+      if (!country) continue
+      await this.prisma.competition.update({ where: { id: comp.id }, data: { country } })
+      updated += 1
+    }
+    if (updated > 0) this.logger.log(`Backfill de país: ${updated} competiciones actualizadas.`)
   }
 
   private async upsertEvent(sportId: string, competitionId: string, entry: any): Promise<void> {
