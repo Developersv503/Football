@@ -80,6 +80,31 @@ export class SettlementService {
             AND t."startAt" <= ${event.startTime}
             AND t."endAt" >= ${event.startTime}
         `
+        // accuracyBasisPoints se recalcula con los contadores YA incrementados
+        // (por eso el +1 va también dentro del cociente, no solo en el SET).
+        await this.prisma.$executeRaw`
+          UPDATE predictor_profiles
+          SET "totalPredictions" = "totalPredictions" + 1,
+              "correctPredictions" = "correctPredictions" + 1,
+              "currentStreak" = "currentStreak" + 1,
+              "rankScore" = "rankScore" + 1,
+              "accuracyBasisPoints" = ROUND((("correctPredictions" + 1)::numeric / ("totalPredictions" + 1)) * 10000),
+              "updatedAt" = now()
+          WHERE "userId" = ANY(${winnerIds}::text[])
+        `
+      }
+
+      if (losers.length > 0) {
+        const loserIds = [...new Set(losers.map((p) => p.userId))]
+        // Racha se corta acá — sin esto currentStreak nunca vuelve a cero.
+        await this.prisma.$executeRaw`
+          UPDATE predictor_profiles
+          SET "totalPredictions" = "totalPredictions" + 1,
+              "currentStreak" = 0,
+              "accuracyBasisPoints" = ROUND(("correctPredictions"::numeric / ("totalPredictions" + 1)) * 10000),
+              "updatedAt" = now()
+          WHERE "userId" = ANY(${loserIds}::text[])
+        `
       }
     }
 
