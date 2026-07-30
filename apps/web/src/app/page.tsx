@@ -1,7 +1,15 @@
 import { Sidebar } from '@/components/Sidebar'
 import { MatchList } from '@/components/MatchList'
 import { Rail } from '@/components/Rail'
-import { getActiveTournament, getGlobalRanking, getLiveEvents, getTodayEvents, getTournamentLeaderboard } from '@/lib/api'
+import { LeagueFilter } from '@/components/LeagueFilter'
+import {
+  getActiveTournament,
+  getCompetitions,
+  getGlobalRanking,
+  getLiveEvents,
+  getTodayEvents,
+  getTournamentLeaderboard,
+} from '@/lib/api'
 import { getViewer } from '@/lib/viewer'
 
 export const dynamic = 'force-dynamic'
@@ -24,25 +32,36 @@ const TODAY_LABEL = new Date().toLocaleDateString('es-AR', {
   timeZone: 'UTC',
 })
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ liga?: string }>
+}) {
+  const { liga } = await searchParams
   const { viewer: user } = await getViewer()
 
-  // Tres fetches independientes — Promise.all en vez de await secuencial
-  // evita una cascada de 3 round-trips a la API.
-  const [eventsPage, livePage, tournamentPage, ranking] = await Promise.all([
-    getTodayEvents(),
+  // Fetches independientes — Promise.all en vez de await secuencial evita
+  // una cascada de round-trips a la API.
+  const [eventsPage, livePage, tournamentPage, ranking, competitions] = await Promise.all([
+    getTodayEvents(liga),
     getLiveEvents(),
     getActiveTournament(),
     getGlobalRanking(5),
+    getCompetitions(),
   ])
 
   const tournament = tournamentPage.items[0] ?? null
   const entries = tournament ? await getTournamentLeaderboard(tournament.id) : null
 
   // En vivo primero, sin duplicar los que ya venían en el listado general.
-  const seenIds = new Set(livePage.items.map((e) => e.id))
-  const events = [...livePage.items, ...eventsPage.items.filter((e) => !seenIds.has(e.id))]
-  const liveCount = livePage.items.length
+  // Con una liga elegida, los "en vivo" también se acotan a esa liga — si no,
+  // el filtro dejaría colarse partidos de otras competiciones.
+  const liveItems = liga
+    ? livePage.items.filter((e) => e.competition.id === liga)
+    : livePage.items
+  const seenIds = new Set(liveItems.map((e) => e.id))
+  const events = [...liveItems, ...eventsPage.items.filter((e) => !seenIds.has(e.id))]
+  const liveCount = liveItems.length
 
   return (
     <div className="shell">
@@ -72,6 +91,8 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
+
+          <LeagueFilter competitions={competitions} selected={liga ?? null} />
         </div>
 
         <div className="content-grid">

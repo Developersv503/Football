@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { EventCard } from '@/lib/api'
 import { competitionColor, initials, kickoffTime, statusLabel } from '@/lib/format'
 import { PredictButtons } from './PredictButtons'
@@ -24,7 +25,7 @@ function MatchCard({ event, isLoggedIn }: { event: EventCard; isLoggedIn: boolea
         )}
       </div>
 
-      <div className="teams">
+      <Link className="teams" href={`/partido/${event.id}`}>
         <div className={`team-row${homeWon ? ' winner' : ''}`}>
           <div className="crest" style={{ background: competitionColor(event.homeTeam) }}>
             {initials(event.homeTeam)}
@@ -39,7 +40,7 @@ function MatchCard({ event, isLoggedIn }: { event: EventCard; isLoggedIn: boolea
           <div className="team-name">{event.awayTeam}</div>
           {event.awayScore != null ? <div className="team-score tnum">{event.awayScore}</div> : null}
         </div>
-      </div>
+      </Link>
 
       <div className="action-block">
         <div className="pred-count">

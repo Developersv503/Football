@@ -9,6 +9,7 @@ import { AdminGuard } from './common/guards/admin.guard'
 import { RateLimitGuard } from './common/guards/rate-limit.guard'
 import { AuthModule } from './modules/auth/auth.module'
 import { EventsModule } from './modules/events/events.module'
+import { CompetitionsModule } from './modules/competitions/competitions.module'
 import { PredictionsModule } from './modules/predictions/predictions.module'
 import { TournamentsModule } from './modules/tournaments/tournaments.module'
 import { PredictorProfilesModule } from './modules/predictor-profiles/predictor-profiles.module'
@@ -22,6 +23,7 @@ import { CronModule } from './modules/cron/cron.module'
     AuditModule,
     AuthModule,
     EventsModule,
+    CompetitionsModule,
     PredictionsModule,
     TournamentsModule,
     PredictorProfilesModule,

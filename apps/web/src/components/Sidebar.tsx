@@ -1,4 +1,6 @@
-import type { ReactNode } from 'react'
+'use client'
+
+import { type ReactNode, useState } from 'react'
 import Link from 'next/link'
 import { logoutAction } from '@/lib/actions'
 import { initials } from '@/lib/format'
@@ -65,55 +67,86 @@ export function Sidebar({
   user: { displayName: string; email: string } | null
   active: NavKey
 }) {
+  const [open, setOpen] = useState(false)
+
   return (
-    <aside className="sidebar">
-      <div className="brand">
-        <div className="brand-mark">P</div>
-        <div className="brand-text">
-          Pronóstico
-          <span>Competí. Acertá. Ganá.</span>
+    <>
+      <div className="mobile-topbar">
+        <button
+          type="button"
+          className="mobile-menu-btn"
+          onClick={() => setOpen(true)}
+          aria-label="Abrir menú"
+          aria-expanded={open}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <path d="M3 6h18M3 12h18M3 18h18" />
+          </svg>
+        </button>
+        <div className="brand">
+          <div className="brand-mark">P</div>
+          <div className="brand-text">Pronóstico</div>
         </div>
       </div>
 
-      <nav className="primary">
-        {NAV_ITEMS.map((item) => (
-          <Link key={item.key} className={`nav-item${item.key === active ? ' active' : ''}`} href={item.href}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              {item.rect ? <rect x="3" y="4" width="18" height="16" rx="2" /> : null}
-              {item.icon}
-            </svg>
-            {item.label}
-            {item.key === 'matches' ? <span className="nav-count tnum">{eventsToday}</span> : null}
-          </Link>
-        ))}
-      </nav>
+      {open ? (
+        <div className="sidebar-backdrop" onClick={() => setOpen(false)} aria-hidden="true" />
+      ) : null}
 
-      <div className="sidebar-footer">
-        <ThemeToggle />
-        {user ? (
-          <div className="user-chip">
-            <div className="user-avatar">{initials(user.displayName)}</div>
-            <div className="user-meta">
-              <div className="user-name">{user.displayName}</div>
-              <div className="user-rank">{user.email}</div>
+      <aside className={`sidebar${open ? ' open' : ''}`}>
+        <div className="brand">
+          <div className="brand-mark">P</div>
+          <div className="brand-text">
+            Pronóstico
+            <span>Competí. Acertá. Ganá.</span>
+          </div>
+        </div>
+
+        <nav className="primary">
+          {NAV_ITEMS.map((item) => (
+            <Link
+              key={item.key}
+              className={`nav-item${item.key === active ? ' active' : ''}`}
+              href={item.href}
+              onClick={() => setOpen(false)}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                {item.rect ? <rect x="3" y="4" width="18" height="16" rx="2" /> : null}
+                {item.icon}
+              </svg>
+              {item.label}
+              {item.key === 'matches' ? <span className="nav-count tnum">{eventsToday}</span> : null}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
+          <ThemeToggle />
+          {user ? (
+            <div className="user-chip">
+              <div className="user-avatar">{initials(user.displayName)}</div>
+              <div className="user-meta">
+                <div className="user-name">{user.displayName}</div>
+                <div className="user-rank">{user.email}</div>
+              </div>
+              <form action={logoutAction}>
+                <button type="submit" className="logout-btn" title="Cerrar sesión" aria-label="Cerrar sesión">
+                  ⏻
+                </button>
+              </form>
             </div>
-            <form action={logoutAction}>
-              <button type="submit" className="logout-btn" title="Cerrar sesión" aria-label="Cerrar sesión">
-                ⏻
-              </button>
-            </form>
-          </div>
-        ) : (
-          <div className="auth-links">
-            <Link href="/login" className="btn-auth-sm">
-              Ingresar
-            </Link>
-            <Link href="/register" className="btn-auth-sm ghost">
-              Crear cuenta
-            </Link>
-          </div>
-        )}
-      </div>
-    </aside>
+          ) : (
+            <div className="auth-links">
+              <Link href="/login" className="btn-auth-sm" onClick={() => setOpen(false)}>
+                Ingresar
+              </Link>
+              <Link href="/register" className="btn-auth-sm ghost" onClick={() => setOpen(false)}>
+                Crear cuenta
+              </Link>
+            </div>
+          )}
+        </div>
+      </aside>
+    </>
   )
 }

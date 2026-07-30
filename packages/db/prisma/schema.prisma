@@ -73,6 +73,13 @@ model Event {
   // Evita un COUNT(*) sobre predictions en cada tarjeta de evento listada.
   predictionsCount Int        @default(0)
 
+  // Alineaciones de Sportradar, cacheadas tal cual llegan normalizadas.
+  // El feed solo las publica ~1h antes del inicio, así que se piden bajo
+  // demanda y se guardan — el trial tiene 1.000 llamadas/día y no alcanza
+  // para pedirlas de nuevo en cada visita a la ficha del partido.
+  lineups          Json?
+  lineupsFetchedAt DateTime?
+
   predictions Prediction[]
   odds        Odds[]
 

@@ -11,12 +11,22 @@ const STATUS_MAP: Record<string, 'SCHEDULED' | 'LIVE' | 'FINISHED' | 'POSTPONED'
   cancelled: 'CANCELLED',
 }
 
-// Mismas competiciones reales que scripts/sync-today.cjs (trial Soccer, sin Odds).
+// Competiciones que se ingestan. Las europeas top son el objetivo del
+// producto, pero de junio a agosto están fuera de temporada y no devuelven
+// fixtures — por eso van también las ligas sudamericanas y los amistosos,
+// que sí tienen partidos en esa ventana y evitan que la home quede vacía.
 const TARGET_COMPETITIONS = new Set([
-  'sr:competition:7',
-  'sr:competition:853',
-  'sr:competition:325',
-  'sr:competition:155',
+  'sr:competition:8', // LaLiga (España)
+  'sr:competition:17', // Premier League (Inglaterra)
+  'sr:competition:23', // Serie A (Italia)
+  'sr:competition:35', // Bundesliga (Alemania)
+  'sr:competition:34', // Ligue 1 (Francia)
+  'sr:competition:7', // UEFA Champions League
+  'sr:competition:679', // UEFA Europa League
+  'sr:competition:329', // Copa del Rey (España)
+  'sr:competition:325', // Brasileiro Serie A
+  'sr:competition:155', // Primera LPF (Argentina)
+  'sr:competition:853', // Club Friendly Games
 ])
 
 /**
@@ -62,17 +72,23 @@ export class SportsSyncService {
     let synced = 0
 
     for (const entry of relevant) {
-      const comp = entry.sport_event.sport_event_context.competition
+      const context = entry.sport_event.sport_event_context
+      const comp = context.competition
+      // `category` (el país o "International Clubs") es hermano de
+      // `competition` dentro de sport_event_context, no un campo anidado
+      // en él — leerlo del lugar equivocado dejaba el país siempre nulo.
+      const country = context.category?.name ?? null
+
       let competition = competitionCache.get(comp.id)
       if (!competition) {
         competition = await this.prisma.competition.upsert({
           where: { sportradarId: comp.id },
-          update: { name: comp.name, country: comp.category?.name ?? null },
+          update: { name: comp.name, country },
           create: {
             sportradarId: comp.id,
             sportId: sport.id,
             name: comp.name,
-            country: comp.category?.name ?? null,
+            country,
           },
         })
         competitionCache.set(comp.id, competition)

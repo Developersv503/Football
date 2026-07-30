@@ -49,15 +49,15 @@ async function upsertSport(sr) {
   })
 }
 
-async function upsertCompetition(sportId, comp) {
+async function upsertCompetition(sportId, comp, country) {
   return prisma.competition.upsert({
     where: { sportradarId: comp.id },
-    update: { name: comp.name, country: comp.category?.name ?? null },
+    update: { name: comp.name, country },
     create: {
       sportradarId: comp.id,
       sportId,
       name: comp.name,
-      country: comp.category?.name ?? null,
+      country,
     },
   })
 }
@@ -117,10 +117,13 @@ async function main() {
   let created = 0
 
   for (const entry of relevant) {
-    const comp = entry.sport_event.sport_event_context.competition
+    const context = entry.sport_event.sport_event_context
+    const comp = context.competition
+    // `category` (país) es hermano de `competition`, no un campo anidado.
+    const country = context.category?.name ?? null
     let competition = competitionCache.get(comp.id)
     if (!competition) {
-      competition = await upsertCompetition(sport.id, comp)
+      competition = await upsertCompetition(sport.id, comp, country)
       competitionCache.set(comp.id, competition)
     }
     await upsertEvent(sport.id, competition.id, entry)

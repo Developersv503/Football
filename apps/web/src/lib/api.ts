@@ -15,6 +15,41 @@ export type EventCard = {
   competition: { id: string; name: string }
 }
 
+export type CompetitionOption = {
+  id: string
+  name: string
+  country: string | null
+  eventCount: number
+}
+
+export type LineupPlayer = {
+  name: string
+  jerseyNumber: number | null
+  position: string | null
+  starter: boolean
+}
+
+export type TeamLineup = {
+  qualifier: 'home' | 'away'
+  teamName: string
+  formation: string | null
+  manager: string | null
+  players: LineupPlayer[]
+}
+
+export type MatchDetail = {
+  id: string
+  homeTeam: string
+  awayTeam: string
+  startTime: string
+  status: EventCard['status']
+  homeScore: number | null
+  awayScore: number | null
+  competition: { id: string; name: string; country: string | null }
+  lineups: TeamLineup[] | null
+  consensus: { total: number; home: number; draw: number; away: number }
+}
+
 export type TournamentCard = {
   id: string
   name: string
@@ -68,8 +103,17 @@ async function apiPost<T>(path: string, body?: unknown, token?: string): Promise
   return data as T
 }
 
-export function getTodayEvents() {
-  return apiGet<CursorPage<EventCard>>('/api/events?take=50')
+export function getTodayEvents(competitionId?: string) {
+  const query = competitionId ? `&competitionId=${encodeURIComponent(competitionId)}` : ''
+  return apiGet<CursorPage<EventCard>>(`/api/events?take=50${query}`)
+}
+
+export function getCompetitions() {
+  return apiGet<CompetitionOption[]>('/api/competitions')
+}
+
+export function getMatchDetail(eventId: string) {
+  return apiGet<MatchDetail>(`/api/events/${eventId}/detail`)
 }
 
 // El listado general ordena por hora de inicio ascendente — con 70+ eventos
