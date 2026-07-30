@@ -48,11 +48,17 @@ export class SportsSyncService {
       return { synced: 0, competitions: 0 }
     }
 
+    // El trial de Sportradar es 1 QPS — pedir estos dos (y el catálogo del
+    // backfill, más abajo) en paralelo dispara un 429 real. Secuencial con
+    // pausa entre llamadas, no Promise.all.
     const today = new Date().toISOString().slice(0, 10)
-    const [todaySchedule, liveSchedule] = await Promise.all([
-      this.fetchJson(`https://api.sportradar.com/soccer/trial/v4/en/schedules/${today}/schedules.json?api_key=${apiKey}`),
-      this.fetchJson(`https://api.sportradar.com/soccer/trial/v4/en/schedules/live/schedules.json?api_key=${apiKey}`),
-    ])
+    const todaySchedule = await this.fetchJson(
+      `https://api.sportradar.com/soccer/trial/v4/en/schedules/${today}/schedules.json?api_key=${apiKey}`,
+    )
+    await this.sleep(1100)
+    const liveSchedule = await this.fetchJson(
+      `https://api.sportradar.com/soccer/trial/v4/en/schedules/live/schedules.json?api_key=${apiKey}`,
+    )
 
     const sport = await this.prisma.sport.upsert({
       where: { key: 'soccer' },
@@ -120,6 +126,7 @@ export class SportsSyncService {
 
     let catalog: any[]
     try {
+      await this.sleep(1100)
       const data = await this.fetchJson(
         `https://api.sportradar.com/soccer/trial/v4/en/competitions.json?api_key=${apiKey}`,
       )
@@ -170,6 +177,10 @@ export class SportsSyncService {
         awayScore: sport_event_status.away_score ?? null,
       },
     })
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 
   private async fetchJson(url: string): Promise<any> {
