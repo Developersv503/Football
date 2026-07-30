@@ -4,7 +4,10 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
+      // generated/** = cliente Prisma. Va en outputs porque `prisma generate`
+      // corre dentro del build de @pronostico/db: sin esto, un cache hit
+      // restauraría dist/ pero no el cliente, y el runtime moriría.
+      "outputs": ["dist/**", "generated/**", ".next/**", "!.next/cache/**"]
     },
     "dev": {
       "cache": false,
