@@ -56,6 +56,23 @@ export function accuracyPct(basisPoints: number): string {
   return `${(basisPoints / 100).toFixed(1)}%`
 }
 
+const OUTCOME_LABEL: Record<string, string> = { HOME: '1 · Gana local', DRAW: 'X · Empate', AWAY: '2 · Gana visitante' }
+
+export function outcomeLabel(outcome: string): string {
+  return OUTCOME_LABEL[outcome] ?? outcome
+}
+
+const PREDICTION_STATUS_LABEL: Record<string, string> = {
+  PENDING: 'Pendiente',
+  WON: 'Acertado',
+  LOST: 'Fallado',
+  VOID: 'Anulado',
+}
+
+export function predictionStatusLabel(status: string): string {
+  return PREDICTION_STATUS_LABEL[status] ?? status
+}
+
 export function timeUntil(iso: string): string {
   const diffMs = new Date(iso).getTime() - Date.now()
   if (diffMs <= 0) return '00:00:00'

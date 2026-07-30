@@ -53,7 +53,7 @@ function RankingRailCard({ ranking }: { ranking: RankingRow[] }) {
           </div>
         ))}
       </div>
-      <a className="rail-link" href="#">
+      <a className="rail-link" href="/pronosticadores">
         Ver ranking completo →
       </a>
     </div>

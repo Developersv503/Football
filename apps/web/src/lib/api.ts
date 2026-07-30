@@ -125,3 +125,20 @@ export function createPrediction(token: string, eventId: string, outcome: Predic
 export function joinTournament(token: string, tournamentId: string) {
   return apiPost<{ id: string }>(`/api/tournaments/${tournamentId}/join`, undefined, token)
 }
+
+export function getTournaments(status?: TournamentCard['status']) {
+  return apiGet<CursorPage<TournamentCard>>(`/api/tournaments?take=50${status ? `&status=${status}` : ''}`)
+}
+
+export type PredictionRow = {
+  id: string
+  outcome: PredictionOutcome
+  status: 'PENDING' | 'WON' | 'LOST' | 'VOID'
+  createdAt: string
+  settledAt: string | null
+  event: { id: string; homeTeam: string; awayTeam: string; startTime: string; status: EventCard['status'] }
+}
+
+export function getMyPredictions(token: string) {
+  return apiGet<CursorPage<PredictionRow>>('/api/predictions/me?take=50', token)
+}

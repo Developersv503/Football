@@ -300,3 +300,33 @@ main { min-width: 0; }
 .predict-form button:disabled { opacity: .5; }
 .pred-sent { font-size: 11.5px; font-weight: 600; color: var(--win); white-space: nowrap; }
 .join-ok { font-size: 12.5px; font-weight: 600; color: var(--win); text-align: center; margin-top: 10px; }
+
+/* Torneos */
+.tournament-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.tournament-full-card { display: flex; flex-direction: column; }
+.tournament-status { display: inline-block; align-self: flex-start; margin: 4px 0 12px; }
+.status-active { color: var(--win); background: color-mix(in srgb, var(--win) 16%, transparent); }
+.status-upcoming { color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.status-closed, .status-settled { color: var(--text-faint); background: var(--surface-3); }
+
+/* Pronosticadores — ranking completo */
+.ranking-full-card { max-width: 640px; }
+.ranking-full-card .rank-row { gap: 12px; }
+.rank-extra { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
+/* Mis pronósticos */
+.predictions-list { display: flex; flex-direction: column; gap: 10px; max-width: 640px; }
+.prediction-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
+}
+.prediction-teams { font-weight: 600; font-size: 13.5px; display: flex; align-items: center; gap: 8px; }
+.prediction-teams .vs { color: var(--text-faint); font-weight: 400; font-size: 11px; }
+.prediction-meta { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-muted); }
+.prediction-outcome { font-weight: 600; color: var(--text); white-space: nowrap; }
+.prediction-status-pending { color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.prediction-status-won { color: var(--win); background: color-mix(in srgb, var(--win) 16%, transparent); }
+.prediction-status-lost { color: var(--live); background: color-mix(in srgb, var(--live) 16%, transparent); }
+.prediction-status-void { color: var(--text-faint); background: var(--surface-3); }
+
+.inline-link { display: inline-block; margin-top: 12px; padding: 8px 18px; }

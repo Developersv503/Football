@@ -1,8 +1,8 @@
 import { Sidebar } from '@/components/Sidebar'
 import { MatchList } from '@/components/MatchList'
 import { Rail } from '@/components/Rail'
-import { getActiveTournament, getGlobalRanking, getLiveEvents, getMyProfile, getTodayEvents, getTournamentLeaderboard } from '@/lib/api'
-import { getSession } from '@/lib/session'
+import { getActiveTournament, getGlobalRanking, getLiveEvents, getTodayEvents, getTournamentLeaderboard } from '@/lib/api'
+import { getViewer } from '@/lib/viewer'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,7 +25,7 @@ const TODAY_LABEL = new Date().toLocaleDateString('es-AR', {
 })
 
 export default async function HomePage() {
-  const session = await getSession()
+  const { viewer: user } = await getViewer()
 
   // Tres fetches independientes — Promise.all en vez de await secuencial
   // evita una cascada de 3 round-trips a la API.
@@ -39,14 +39,6 @@ export default async function HomePage() {
   const tournament = tournamentPage.items[0] ?? null
   const entries = tournament ? await getTournamentLeaderboard(tournament.id) : null
 
-  // El JWT no lleva displayName — se resuelve con el perfil real. Si el
-  // token quedó viejo/inválido, se trata como invitado en vez de romper la página.
-  const user = session
-    ? await getMyProfile(session.token)
-        .then((profile) => ({ displayName: profile.user.displayName, email: session.user.email }))
-        .catch(() => ({ displayName: session.user.email, email: session.user.email }))
-    : null
-
   // En vivo primero, sin duplicar los que ya venían en el listado general.
   const seenIds = new Set(livePage.items.map((e) => e.id))
   const events = [...livePage.items, ...eventsPage.items.filter((e) => !seenIds.has(e.id))]
@@ -54,7 +46,7 @@ export default async function HomePage() {
 
   return (
     <div className="shell">
-      <Sidebar eventsToday={events.length} user={user} />
+      <Sidebar eventsToday={events.length} user={user} active="matches" />
 
       <main>
         <div className="topbar">

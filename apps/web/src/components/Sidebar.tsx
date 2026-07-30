@@ -4,16 +4,32 @@ import { logoutAction } from '@/lib/actions'
 import { initials } from '@/lib/format'
 import { ThemeToggle } from './ThemeToggle'
 
-const NAV_ITEMS: { label: string; active?: boolean; rect?: boolean; icon: ReactNode }[] = [
-  { label: 'Matches', active: true, rect: true, icon: <path d="M3 9h18M8 4v3M16 4v3" /> },
-  { label: 'Torneos de pronósticos', icon: <path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0V4zM4 6h3M17 6h3" /> },
-  { label: 'Pronósticos', icon: <path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" /> },
+export type NavKey = 'matches' | 'torneos' | 'pronosticos' | 'bonificaciones' | 'pronosticadores' | 'casas' | 'articulos'
+
+const NAV_ITEMS: { key: NavKey; label: string; href: string; rect?: boolean; icon: ReactNode }[] = [
+  { key: 'matches', label: 'Matches', href: '/', rect: true, icon: <path d="M3 9h18M8 4v3M16 4v3" /> },
   {
+    key: 'torneos',
+    label: 'Torneos de pronósticos',
+    href: '/torneos',
+    icon: <path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0V4zM4 6h3M17 6h3" />,
+  },
+  {
+    key: 'pronosticos',
+    label: 'Pronósticos',
+    href: '/pronosticos',
+    icon: <path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />,
+  },
+  {
+    key: 'bonificaciones',
     label: 'Bonificaciones',
+    href: '/bonificaciones',
     icon: <path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6M2 7h20v5H2zM12 22V7M12 7a2.5 2.5 0 010-5C14 2 12 7 12 7zM12 7a2.5 2.5 0 000-5C10 2 12 7 12 7z" />,
   },
   {
+    key: 'pronosticadores',
     label: 'Pronosticadores',
+    href: '/pronosticadores',
     icon: (
       <>
         <circle cx="12" cy="8" r="4" />
@@ -22,7 +38,9 @@ const NAV_ITEMS: { label: string; active?: boolean; rect?: boolean; icon: ReactN
     ),
   },
   {
+    key: 'casas',
     label: 'Casas de apuestas',
+    href: '/casas-de-apuestas',
     icon: (
       <>
         <rect x="2" y="6" width="20" height="12" rx="2" />
@@ -30,15 +48,22 @@ const NAV_ITEMS: { label: string; active?: boolean; rect?: boolean; icon: ReactN
       </>
     ),
   },
-  { label: 'Artículos', icon: <path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5v15z" /> },
+  {
+    key: 'articulos',
+    label: 'Artículos',
+    href: '/articulos',
+    icon: <path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5v15z" />,
+  },
 ]
 
 export function Sidebar({
   eventsToday,
   user,
+  active,
 }: {
   eventsToday: number
   user: { displayName: string; email: string } | null
+  active: NavKey
 }) {
   return (
     <aside className="sidebar">
@@ -52,14 +77,14 @@ export function Sidebar({
 
       <nav className="primary">
         {NAV_ITEMS.map((item) => (
-          <a key={item.label} className={`nav-item${item.active ? ' active' : ''}`} href="#">
+          <Link key={item.key} className={`nav-item${item.key === active ? ' active' : ''}`} href={item.href}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
               {item.rect ? <rect x="3" y="4" width="18" height="16" rx="2" /> : null}
               {item.icon}
             </svg>
             {item.label}
-            {item.active ? <span className="nav-count tnum">{eventsToday}</span> : null}
-          </a>
+            {item.key === 'matches' ? <span className="nav-count tnum">{eventsToday}</span> : null}
+          </Link>
         ))}
       </nav>
 
