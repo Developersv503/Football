@@ -73,6 +73,22 @@ export function predictionStatusLabel(status: string): string {
   return PREDICTION_STATUS_LABEL[status] ?? status
 }
 
+const POINTS_REASON_LABEL: Record<string, string> = {
+  MATCH_CONTEST_WIN: 'Premio · marcador exacto',
+  REDEMPTION_REQUEST: 'Solicitud de canje',
+  REDEMPTION_REJECTED: 'Canje rechazado (reintegro)',
+  ADMIN_ADJUSTMENT: 'Ajuste manual',
+}
+
+export function pointsReasonLabel(reason: string): string {
+  return POINTS_REASON_LABEL[reason] ?? reason
+}
+
+export function pointsToMoney(points: number, pointsPerCurrencyUnit: number, currency: string): string {
+  const amount = pointsPerCurrencyUnit > 0 ? points / pointsPerCurrencyUnit : 0
+  return `${amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`
+}
+
 export function timeUntil(iso: string): string {
   const diffMs = new Date(iso).getTime() - Date.now()
   if (diffMs <= 0) return '00:00:00'

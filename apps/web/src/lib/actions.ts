@@ -1,7 +1,15 @@
 'use server'
 
 import { redirect } from 'next/navigation'
-import { createPrediction, joinTournament, loginUser, registerUser, type PredictionOutcome } from './api'
+import {
+  createPrediction,
+  joinTournament,
+  loginUser,
+  registerUser,
+  requestRedemption,
+  submitScorePrediction,
+  type PredictionOutcome,
+} from './api'
 import { clearSessionCookie, getSessionToken, setSessionCookie } from './session'
 
 export type FormState = { error: string | null }
@@ -56,6 +64,43 @@ export async function predictAction(_prev: ActionResult, formData: FormData): Pr
     await createPrediction(token, eventId, outcome as PredictionOutcome)
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : 'No se pudo enviar el pronóstico.' }
+  }
+  return { ok: true, error: null }
+}
+
+export async function submitScoreAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const token = await getSessionToken()
+  if (!token) return { ok: false, error: 'Iniciá sesión para pronosticar.' }
+
+  const eventId = String(formData.get('eventId') ?? '')
+  const homeScore = Number(formData.get('homeScore'))
+  const awayScore = Number(formData.get('awayScore'))
+  if (!eventId || !Number.isInteger(homeScore) || !Number.isInteger(awayScore) || homeScore < 0 || awayScore < 0) {
+    return { ok: false, error: 'Marcador inválido.' }
+  }
+
+  try {
+    await submitScorePrediction(token, eventId, homeScore, awayScore)
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : 'No se pudo enviar el pronóstico.' }
+  }
+  return { ok: true, error: null }
+}
+
+export async function requestRedemptionAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const token = await getSessionToken()
+  if (!token) return { ok: false, error: 'Iniciá sesión para canjear puntos.' }
+
+  const pointsAmount = Number(formData.get('pointsAmount'))
+  const contactPhone = String(formData.get('contactPhone') ?? '').trim()
+  const contactNote = String(formData.get('contactNote') ?? '').trim()
+  if (!Number.isInteger(pointsAmount) || pointsAmount <= 0) return { ok: false, error: 'Cantidad inválida.' }
+  if (!contactPhone) return { ok: false, error: 'Dejanos un teléfono de contacto.' }
+
+  try {
+    await requestRedemption(token, pointsAmount, contactPhone, contactNote || undefined)
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : 'No se pudo enviar la solicitud.' }
   }
   return { ok: true, error: null }
 }

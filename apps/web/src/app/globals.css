@@ -460,3 +460,46 @@ main { min-width: 0; }
 .lineup-num { width: 18px; color: var(--text-faint); font-size: 10.5px; flex-shrink: 0; }
 .lineup-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lineup-pos { font-size: 10.5px; color: var(--text-faint); white-space: nowrap; }
+
+/* Concurso de marcador exacto */
+.contest-card { display: flex; flex-direction: column; gap: 12px; }
+.contest-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.contest-head .detail-card-title { margin-bottom: 0; }
+.contest-tiers { display: flex; gap: 6px; flex-wrap: wrap; }
+.contest-tier-chip {
+  font-size: 11px; font-weight: 500; padding: 4px 9px; border-radius: 20px;
+  background: var(--surface-2); border: 1px solid var(--line); color: var(--text-muted); white-space: nowrap;
+}
+.contest-tier-chip b { color: var(--accent); font-family: 'Plex Mono', monospace; }
+.contest-tier-more { font-size: 10.5px; color: var(--text-faint); align-self: center; }
+.contest-recommended { font-size: 12px; color: var(--text-muted); }
+.contest-recommended b { color: var(--text); font-family: 'Plex Mono', monospace; }
+.contest-my-pred { font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
+.contest-my-pred b { font-size: 16px; }
+.contest-my-pred-note { font-size: 11px; color: var(--text-muted); }
+.contest-leaderboard { margin-top: 4px; padding-top: 12px; border-top: 1px dashed var(--line); }
+
+.score-predict-form { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.score-input-group { display: flex; flex-direction: column; gap: 6px; font-size: 11px; font-weight: 600; color: var(--text-muted); }
+.score-input-group input {
+  width: 56px; font: inherit; font-family: 'Plex Mono', monospace; font-size: 16px; text-align: center;
+  padding: 8px 4px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text);
+}
+.score-input-group input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.score-vs { color: var(--text-faint); font-weight: 600; padding-bottom: 10px; }
+
+/* Puntos y canje */
+.content-grid.points-grid { grid-template-columns: 1fr; max-width: 640px; gap: 16px; }
+.content-grid.single { grid-template-columns: 1fr; }
+.points-balance-card { text-align: center; }
+.points-balance { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 44px; color: var(--accent); margin: 6px 0 2px; }
+.points-balance-money { font-size: 13px; color: var(--text-muted); }
+.redemption-form { gap: 12px; }
+.points-positive { color: var(--win); }
+.points-negative { color: var(--live); }
+
+@media (max-width: 760px) {
+  .score-predict-form { gap: 8px; }
+  .score-input-group input { width: 48px; }
+  .points-balance { font-size: 36px; }
+}

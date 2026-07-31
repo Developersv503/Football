@@ -6,7 +6,15 @@ import { logoutAction } from '@/lib/actions'
 import { initials } from '@/lib/format'
 import { ThemeToggle } from './ThemeToggle'
 
-export type NavKey = 'matches' | 'torneos' | 'pronosticos' | 'bonificaciones' | 'pronosticadores' | 'casas' | 'articulos'
+export type NavKey =
+  | 'matches'
+  | 'torneos'
+  | 'pronosticos'
+  | 'puntos'
+  | 'bonificaciones'
+  | 'pronosticadores'
+  | 'casas'
+  | 'articulos'
 
 const NAV_ITEMS: { key: NavKey; label: string; href: string; rect?: boolean; icon: ReactNode }[] = [
   { key: 'matches', label: 'Matches', href: '/', rect: true, icon: <path d="M3 9h18M8 4v3M16 4v3" /> },
@@ -21,6 +29,17 @@ const NAV_ITEMS: { key: NavKey; label: string; href: string; rect?: boolean; ico
     label: 'Pronósticos',
     href: '/pronosticos',
     icon: <path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />,
+  },
+  {
+    key: 'puntos',
+    label: 'Mis puntos',
+    href: '/puntos',
+    icon: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3.5 2" />
+      </>
+    ),
   },
   {
     key: 'bonificaciones',

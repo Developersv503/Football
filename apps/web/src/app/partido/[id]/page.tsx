@@ -4,7 +4,13 @@ import { Sidebar } from '@/components/Sidebar'
 import { PredictButtons } from '@/components/PredictButtons'
 import { Consensus } from '@/components/Consensus'
 import { Lineups } from '@/components/Lineups'
-import { getMatchDetail } from '@/lib/api'
+import { MatchContestCard } from '@/components/MatchContestCard'
+import {
+  getMatchContest,
+  getMatchContestLeaderboard,
+  getMatchDetail,
+  getMyScorePrediction,
+} from '@/lib/api'
 import { competitionColor, initials, kickoffTime, statusLabel } from '@/lib/format'
 import { getViewer } from '@/lib/viewer'
 
@@ -12,10 +18,20 @@ export const dynamic = 'force-dynamic'
 
 export default async function MatchPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { viewer } = await getViewer()
+  const { viewer, token } = await getViewer()
 
-  const match = await getMatchDetail(id).catch(() => null)
+  const [match, contest] = await Promise.all([
+    getMatchDetail(id).catch(() => null),
+    getMatchContest(id),
+  ])
   if (!match) notFound()
+
+  const [myScorePrediction, scoreLeaderboard] = contest
+    ? await Promise.all([
+        viewer && token ? getMyScorePrediction(token, id) : Promise.resolve(null),
+        getMatchContestLeaderboard(id, 10).then((p) => p.items),
+      ])
+    : [null, []]
 
   const isLive = match.status === 'LIVE'
   const kickoff = new Date(match.startTime).toLocaleString('es-AR', {
@@ -82,6 +98,19 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
               <div className="detail-card-title">Tu pronóstico</div>
               <PredictButtons eventId={match.id} isLoggedIn={Boolean(viewer)} />
             </div>
+          ) : null}
+
+          {contest ? (
+            <MatchContestCard
+              contest={contest}
+              eventId={match.id}
+              homeTeam={match.homeTeam}
+              awayTeam={match.awayTeam}
+              isLoggedIn={Boolean(viewer)}
+              isOpenForPredictions={contest.status === 'OPEN' && match.status === 'SCHEDULED'}
+              myPrediction={myScorePrediction}
+              leaderboard={scoreLeaderboard}
+            />
           ) : null}
 
           <Consensus
