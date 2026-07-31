@@ -13,6 +13,8 @@ import { CompetitionsModule } from './modules/competitions/competitions.module'
 import { PredictionsModule } from './modules/predictions/predictions.module'
 import { TournamentsModule } from './modules/tournaments/tournaments.module'
 import { PredictorProfilesModule } from './modules/predictor-profiles/predictor-profiles.module'
+import { MatchContestsModule } from './modules/match-contests/match-contests.module'
+import { PointsModule } from './modules/points/points.module'
 import { AdminModule } from './modules/admin/admin.module'
 import { CronModule } from './modules/cron/cron.module'
 
@@ -27,6 +29,8 @@ import { CronModule } from './modules/cron/cron.module'
     PredictionsModule,
     TournamentsModule,
     PredictorProfilesModule,
+    MatchContestsModule,
+    PointsModule,
     AdminModule,
     CronModule,
   ],

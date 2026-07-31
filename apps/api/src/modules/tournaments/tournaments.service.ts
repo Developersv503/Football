@@ -2,7 +2,7 @@ import { ConflictException, Inject, Injectable, NotFoundException, BadRequestExc
 import { Prisma, type PrismaClient } from '@pronostico/db'
 import { PRISMA } from '../../infrastructure/prisma/prisma.module'
 import { buildCursorPage, clampPageSize, type CursorPage } from '../../common/pagination/cursor-pagination.util'
-import type { ListTournamentsDto, LeaderboardDto } from './tournaments.dto'
+import type { CreateTournamentDto, ListTournamentsDto, LeaderboardDto, UpdateTournamentDto } from './tournaments.dto'
 
 @Injectable()
 export class TournamentsService {
@@ -60,5 +60,18 @@ export class TournamentsService {
       }
       throw err
     }
+  }
+
+  // ─────────────────────────────── Admin ───────────────────────────────
+
+  create(dto: CreateTournamentDto) {
+    if (dto.endAt <= dto.startAt) throw new BadRequestException('endAt debe ser posterior a startAt')
+    return this.prisma.tournament.create({ data: dto })
+  }
+
+  async update(id: string, dto: UpdateTournamentDto) {
+    const tournament = await this.prisma.tournament.findUnique({ where: { id }, select: { id: true } })
+    if (!tournament) throw new NotFoundException('Torneo no encontrado')
+    return this.prisma.tournament.update({ where: { id }, data: dto })
   }
 }

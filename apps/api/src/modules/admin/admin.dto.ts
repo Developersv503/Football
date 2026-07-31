@@ -12,3 +12,9 @@ export const listAuditLogsSchema = z.object({
   take: z.coerce.number().int().positive().optional(),
 })
 export type ListAuditLogsDto = z.infer<typeof listAuditLogsSchema>
+
+export const updateUserSchema = z.object({
+  isActive: z.boolean().optional(),
+  role: z.enum(['USER', 'ADMIN']).optional(),
+})
+export type UpdateUserDto = z.infer<typeof updateUserSchema>

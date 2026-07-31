@@ -34,15 +34,15 @@ model Sport {
 }
 
 model Competition {
-  id            String   @id @default(cuid())
-  sportradarId  String   @unique // sr:competition:XXX — idempotencia en el upsert del worker
-  sportId       String
-  sport         Sport    @relation(fields: [sportId], references: [id])
-  name          String
-  country       String?
-  events        Event[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  sportradarId String   @unique // sr:competition:XXX — idempotencia en el upsert del worker
+  sportId      String
+  sport        Sport    @relation(fields: [sportId], references: [id])
+  name         String
+  country      String?
+  events       Event[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([sportId])
   @@map("competitions")
@@ -57,21 +57,21 @@ enum EventStatus {
 }
 
 model Event {
-  id              String      @id @default(cuid())
-  sportradarId    String      @unique
-  sportId         String
-  sport           Sport       @relation(fields: [sportId], references: [id])
-  competitionId   String
-  competition     Competition @relation(fields: [competitionId], references: [id])
-  homeTeam        String
-  awayTeam        String
-  startTime       DateTime
-  status          EventStatus @default(SCHEDULED)
-  homeScore       Int?
-  awayScore       Int?
+  id               String      @id @default(cuid())
+  sportradarId     String      @unique
+  sportId          String
+  sport            Sport       @relation(fields: [sportId], references: [id])
+  competitionId    String
+  competition      Competition @relation(fields: [competitionId], references: [id])
+  homeTeam         String
+  awayTeam         String
+  startTime        DateTime
+  status           EventStatus @default(SCHEDULED)
+  homeScore        Int?
+  awayScore        Int?
   // Denormalizado: se incrementa atómicamente al crear una Prediction.
   // Evita un COUNT(*) sobre predictions en cada tarjeta de evento listada.
-  predictionsCount Int        @default(0)
+  predictionsCount Int         @default(0)
 
   // Alineaciones de Sportradar, cacheadas tal cual llegan normalizadas.
   // El feed solo las publica ~1h antes del inicio, así que se piden bajo
@@ -80,8 +80,9 @@ model Event {
   lineups          Json?
   lineupsFetchedAt DateTime?
 
-  predictions Prediction[]
-  odds        Odds[]
+  predictions  Prediction[]
+  odds         Odds[]
+  matchContest MatchContest?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -97,15 +98,15 @@ model Event {
 
 // Solo lectura — referencia informativa, no se opera contra esto.
 model Odds {
-  id         String   @id @default(cuid())
-  eventId    String
-  event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  bookmaker  String
-  market     String   @default("1x2")
-  homeOdds   Decimal? @db.Decimal(6, 2)
-  drawOdds   Decimal? @db.Decimal(6, 2)
-  awayOdds   Decimal? @db.Decimal(6, 2)
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  bookmaker String
+  market    String   @default("1x2")
+  homeOdds  Decimal? @db.Decimal(6, 2)
+  drawOdds  Decimal? @db.Decimal(6, 2)
+  awayOdds  Decimal? @db.Decimal(6, 2)
+  updatedAt DateTime @updatedAt
 
   @@unique([eventId, bookmaker, market])
   @@index([eventId])
@@ -125,12 +126,17 @@ model User {
   passwordHash String
   displayName  String
   role         UserRole @default(USER)
+  // Suspensión por el admin (fraude/abuso) — bloquea login, no borra historial.
+  isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
 
-  profile     PredictorProfile?
-  predictions Prediction[]
-  entries     TournamentEntry[]
-  auditLogs   AuditLog[]
+  profile           PredictorProfile?
+  predictions       Prediction[]
+  entries           TournamentEntry[]
+  auditLogs         AuditLog[]
+  scorePredictions  ScorePrediction[]
+  pointsLedger      PointsLedgerEntry[]
+  pointsRedemptions PointsRedemption[]
 
   @@map("users")
 }
@@ -138,14 +144,17 @@ model User {
 // 1:1 con User. Se actualiza en el job de liquidación (sports-sync), NUNCA
 // se recalcula con un aggregate sobre Prediction en el request del perfil.
 model PredictorProfile {
-  userId               String   @id
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  totalPredictions     Int      @default(0)
-  correctPredictions   Int      @default(0)
-  accuracyBasisPoints  Int      @default(0) // % acierto * 100, entero — evita floats en index/orden
-  rankScore            Int      @default(0)
-  currentStreak        Int      @default(0)
-  updatedAt            DateTime @updatedAt
+  userId              String   @id
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  totalPredictions    Int      @default(0)
+  correctPredictions  Int      @default(0)
+  accuracyBasisPoints Int      @default(0) // % acierto * 100, entero — evita floats en index/orden
+  rankScore           Int      @default(0)
+  currentStreak       Int      @default(0)
+  // Saldo de puntos canjeables por dinero real (transferencia manual del
+  // dueño) — se mueve solo vía PointsLedgerEntry, nunca se edita directo.
+  pointsBalance       Int      @default(0)
+  updatedAt           DateTime @updatedAt
 
   // Leaderboard global de pronosticadores, paginado por score.
   @@index([rankScore(sort: Desc)])
@@ -168,14 +177,14 @@ enum PredictionStatus {
 }
 
 model Prediction {
-  id        String             @id @default(cuid())
+  id        String            @id @default(cuid())
   userId    String
-  user      User               @relation(fields: [userId], references: [id])
+  user      User              @relation(fields: [userId], references: [id])
   eventId   String
-  event     Event              @relation(fields: [eventId], references: [id])
+  event     Event             @relation(fields: [eventId], references: [id])
   outcome   PredictionOutcome
-  status    PredictionStatus   @default(PENDING)
-  createdAt DateTime           @default(now())
+  status    PredictionStatus  @default(PENDING)
+  createdAt DateTime          @default(now())
   settledAt DateTime?
 
   // Un pronóstico por usuario por evento.
@@ -234,6 +243,131 @@ model TournamentEntry {
   // Leaderboard del torneo, paginado por score.
   @@index([tournamentId, score(sort: Desc)])
   @@map("tournament_entries")
+}
+
+// ──────────────── Pronóstico de marcador exacto (por partido) ─────────────
+// Juego separado del 1x2 de `Prediction`: el usuario adivina goles de cada
+// equipo, gana quien acierta el marcador EXACTO y lo mandó primero. Premio
+// en puntos, configurable por partido desde el panel admin.
+
+enum MatchContestStatus {
+  OPEN // acepta pronósticos
+  LOCKED // el partido ya arrancó, cerrado a nuevos pronósticos
+  SETTLED // partido terminado, puntos repartidos
+}
+
+model MatchContest {
+  id      String             @id @default(cuid())
+  eventId String             @unique
+  event   Event              @relation(fields: [eventId], references: [id])
+  status  MatchContestStatus @default(OPEN)
+
+  // Pronóstico sugerido por el dueño, publicado ANTES del partido — solo
+  // informativo/promocional, no participa en el cálculo de puntos (eso
+  // siempre se compara contra el marcador real al liquidar).
+  recommendedHomeScore Int?
+  recommendedAwayScore Int?
+
+  rewardTiers      MatchContestRewardTier[]
+  scorePredictions ScorePrediction[]
+  settledAt        DateTime?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  @@map("match_contests")
+}
+
+// Cuántos puntos gana cada puesto y hasta qué puesto se premia — lo decide
+// el dueño por partido. Ej: rank 1→1200, rank 2→1000, rank 3→500; si no
+// carga rank 4 en adelante, esos puestos no cobran aunque acierten exacto.
+model MatchContestRewardTier {
+  id             String       @id @default(cuid())
+  matchContestId String
+  matchContest   MatchContest @relation(fields: [matchContestId], references: [id], onDelete: Cascade)
+  rank           Int
+  points         Int
+
+  @@unique([matchContestId, rank])
+  @@map("match_contest_reward_tiers")
+}
+
+model ScorePrediction {
+  id             String       @id @default(cuid())
+  matchContestId String
+  matchContest   MatchContest @relation(fields: [matchContestId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  homeScore      Int
+  awayScore      Int
+  // null hasta liquidar. Solo se llena rank/pointsAwarded para exactos.
+  isExactMatch   Boolean?
+  rank           Int?
+  pointsAwarded  Int          @default(0)
+  createdAt      DateTime     @default(now())
+
+  // Un pronóstico de marcador por usuario por partido.
+  @@unique([matchContestId, userId])
+  // Liquidación: entre los exactos, ordena por quién lo mandó primero.
+  @@index([matchContestId, createdAt])
+  @@map("score_predictions")
+}
+
+// ───────────────────────────── Puntos y canje ──────────────────────────────
+
+// Historial inmutable de movimientos — auditoría/soporte, nunca se recalcula
+// el saldo desde acá en caliente (el saldo vive en PredictorProfile.pointsBalance).
+model PointsLedgerEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  delta     Int
+  reason    String // "MATCH_CONTEST_WIN" | "REDEMPTION_REQUEST" | "REDEMPTION_REJECTED" | "ADMIN_ADJUSTMENT"
+  refId     String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("points_ledger_entries")
+}
+
+enum PointsRedemptionStatus {
+  REQUESTED
+  CONTACTED
+  PAID
+  REJECTED
+}
+
+// No hay pasarela de pago: el usuario pide canjear puntos, el dueño lo
+// contacta y transfiere dinero por fuera de la plataforma. Este modelo es
+// solo el tracking de esa solicitud manual, no mueve dinero real.
+model PointsRedemption {
+  id           String                 @id @default(cuid())
+  userId       String
+  user         User                   @relation(fields: [userId], references: [id])
+  pointsAmount Int
+  contactPhone String?
+  contactNote  String?
+  status       PointsRedemptionStatus @default(REQUESTED)
+  requestedAt  DateTime               @default(now())
+  resolvedAt   DateTime?
+
+  @@index([status, requestedAt])
+  @@index([userId, requestedAt(sort: Desc)])
+  @@map("points_redemptions")
+}
+
+// Config general editable por el admin: meta de puntos de la jornada actual
+// + tasa de conversión puntos→dinero real (para que el dueño sepa cuánto
+// transferir al liquidar un canje). Singleton — un único row id "current".
+model PredictionRoundConfig {
+  id                    String   @id @default("current")
+  roundLabel            String   @default("Jornada actual")
+  targetPoints          Int      @default(0)
+  currency              String   @default("USD")
+  // Cuántos puntos equivalen a 1 unidad de `currency`. Ej: 100 → 1200 puntos = 12 USD.
+  pointsPerCurrencyUnit Int      @default(100)
+  updatedAt             DateTime @updatedAt
+
+  @@map("prediction_round_config")
 }
 
 // ────────────────────────────────── Auditoría ─────────────────────────────

@@ -2,7 +2,7 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import type { Prisma, PrismaClient } from '@pronostico/db'
 import { PRISMA } from '../../infrastructure/prisma/prisma.module'
 import { buildCursorPage, clampPageSize, type CursorPage } from '../../common/pagination/cursor-pagination.util'
-import type { ListEventsDto } from './events.dto'
+import type { AdminUpdateEventDto, ListEventsDto } from './events.dto'
 
 // Solo los campos que la tarjeta de evento necesita — evita traer columnas
 // de más en un listado que puede correr miles de veces por día.
@@ -60,5 +60,11 @@ export class EventsService {
     })
     if (!event) throw new NotFoundException('Evento no encontrado')
     return event
+  }
+
+  async adminUpdate(id: string, dto: AdminUpdateEventDto) {
+    const event = await this.prisma.event.findUnique({ where: { id }, select: { id: true } })
+    if (!event) throw new NotFoundException('Evento no encontrado')
+    return this.prisma.event.update({ where: { id }, data: dto, select: EVENT_CARD_SELECT })
   }
 }

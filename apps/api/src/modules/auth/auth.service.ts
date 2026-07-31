@@ -37,12 +37,13 @@ export class AuthService {
   async login(dto: LoginDto): Promise<{ accessToken: string }> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
-      select: { id: true, email: true, role: true, passwordHash: true },
+      select: { id: true, email: true, role: true, passwordHash: true, isActive: true },
     })
     if (!user) throw new UnauthorizedException('Credenciales inválidas')
 
     const valid = await bcrypt.compare(dto.password, user.passwordHash)
     if (!valid) throw new UnauthorizedException('Credenciales inválidas')
+    if (!user.isActive) throw new UnauthorizedException('Cuenta suspendida')
 
     return { accessToken: await this.signToken(user) }
   }
