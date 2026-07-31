@@ -449,6 +449,7 @@ main { min-width: 0; }
 .consensus-pct { font-size: 12px; font-weight: 600; text-align: right; }
 
 .lineups-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.lineup-col { min-width: 0; }
 .lineup-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .lineup-team { font-weight: 600; font-size: 13px; }
 .lineup-formation { font-family: 'Plex Mono', monospace; font-size: 11px; color: var(--text-muted); }
