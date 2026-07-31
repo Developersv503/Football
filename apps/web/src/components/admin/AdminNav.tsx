@@ -11,6 +11,7 @@ import {
   TrophyOutlined,
 } from '@ant-design/icons'
 import { Menu } from 'antd'
+import { useAdminThemeMode } from '@/app/admin/AdminThemeProvider'
 
 const ITEMS = [
   { key: '/admin', label: 'Dashboard', icon: <DashboardOutlined style={{ color: '#4CC9F0' }} /> },
@@ -23,6 +24,7 @@ const ITEMS = [
 
 export function AdminNav({ mode = 'inline' }: { mode?: 'inline' | 'horizontal' }) {
   const pathname = usePathname()
+  const { mode: themeMode } = useAdminThemeMode()
   const active = ITEMS.slice().sort((a, b) => b.key.length - a.key.length).find((item) =>
     item.key === '/admin' ? pathname === '/admin' : pathname.startsWith(item.key),
   )
@@ -30,7 +32,7 @@ export function AdminNav({ mode = 'inline' }: { mode?: 'inline' | 'horizontal' }
   return (
     <Menu
       mode={mode}
-      theme="dark"
+      theme={themeMode}
       selectedKeys={active ? [active.key] : []}
       style={{ background: 'transparent', borderInlineEnd: 'none' }}
       items={ITEMS.map((item) => ({
