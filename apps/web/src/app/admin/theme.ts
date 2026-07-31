@@ -1,9 +1,9 @@
 import type { ThemeConfig } from 'antd'
 
-// Mismos tokens que admin.css (paleta fría "consola de control"), mapeados
-// al sistema de theming de antd para que sus componentes calcen con el resto
-// del panel sin CSS custom por-componente.
-export const adminTheme: ThemeConfig = {
+// Tokens de antd espejados de admin.css (paleta fría "consola de control")
+// para que sus componentes calcen con el resto del panel. Dos variantes —
+// oscuro (default) y claro — intercambiadas en runtime por AdminThemeProvider.
+export const adminThemeDark: ThemeConfig = {
   hashed: false,
   token: {
     colorPrimary: '#4CC9F0',
@@ -28,11 +28,7 @@ export const adminTheme: ThemeConfig = {
     wireframe: false,
   },
   components: {
-    Layout: {
-      siderBg: '#0F141D',
-      headerBg: '#0F141D',
-      bodyBg: '#090C12',
-    },
+    Layout: { siderBg: '#0F141D', headerBg: '#0F141D', bodyBg: '#090C12' },
     Menu: {
       darkItemBg: '#0F141D',
       darkSubMenuItemBg: '#0F141D',
@@ -43,21 +39,52 @@ export const adminTheme: ThemeConfig = {
       itemBorderRadius: 8,
       itemHeight: 44,
     },
-    Table: {
-      headerBg: '#151C28',
-      headerColor: '#7A8AA0',
-      rowHoverBg: '#151C28',
-      borderColor: '#232E40',
+    Table: { headerBg: '#151C28', headerColor: '#7A8AA0', rowHoverBg: '#151C28', borderColor: '#232E40' },
+    Card: { colorBgContainer: '#0F141D' },
+    Statistic: { contentFontSize: 26 },
+    Button: { primaryShadow: 'none', fontWeight: 600 },
+  },
+}
+
+export const adminThemeLight: ThemeConfig = {
+  hashed: false,
+  token: {
+    colorPrimary: '#0B84A5',
+    colorInfo: '#0B84A5',
+    colorSuccess: '#21875A',
+    colorWarning: '#B5750F',
+    colorError: '#C63B3B',
+    colorBgBase: '#F3F6FA',
+    colorBgContainer: '#FFFFFF',
+    colorBgElevated: '#FFFFFF',
+    colorBgLayout: '#F3F6FA',
+    colorBorder: '#E1E7EF',
+    colorBorderSecondary: '#EAEEF3',
+    colorText: '#182433',
+    colorTextSecondary: '#4C5A6E',
+    colorTextTertiary: '#6E7C90',
+    colorTextQuaternary: '#9AA6B6',
+    fontFamily: "'Plex Sans', 'Segoe UI', sans-serif",
+    fontFamilyCode: "'Plex Mono', monospace",
+    borderRadius: 8,
+    borderRadiusLG: 12,
+    wireframe: false,
+  },
+  components: {
+    Layout: { siderBg: '#FFFFFF', headerBg: '#FFFFFF', bodyBg: '#F3F6FA' },
+    Menu: {
+      itemBg: '#FFFFFF',
+      subMenuItemBg: '#FFFFFF',
+      itemSelectedBg: 'rgba(11, 132, 165, 0.10)',
+      itemSelectedColor: '#0B84A5',
+      itemColor: '#4C5A6E',
+      itemHoverColor: '#182433',
+      itemBorderRadius: 8,
+      itemHeight: 44,
     },
-    Card: {
-      colorBgContainer: '#0F141D',
-    },
-    Statistic: {
-      contentFontSize: 26,
-    },
-    Button: {
-      primaryShadow: 'none',
-      fontWeight: 600,
-    },
+    Table: { headerBg: '#F3F6FA', headerColor: '#6E7C90', rowHoverBg: '#F3F6FA', borderColor: '#E1E7EF' },
+    Card: { colorBgContainer: '#FFFFFF' },
+    Statistic: { contentFontSize: 26 },
+    Button: { primaryShadow: 'none', fontWeight: 600 },
   },
 }

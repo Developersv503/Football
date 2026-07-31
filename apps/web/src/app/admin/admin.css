@@ -18,6 +18,24 @@
   --adm-ok: #34B378;
 }
 
+.admin-theme-root[data-theme="light"] {
+  --adm-bg: #F3F6FA;
+  --adm-surface: #FFFFFF;
+  --adm-surface-2: #F3F6FA;
+  --adm-surface-3: #EAEEF3;
+  --adm-line: #E1E7EF;
+  --adm-text: #182433;
+  --adm-text-muted: #5B6B82;
+  --adm-text-faint: #8794A6;
+  --adm-accent: #0B84A5;
+  --adm-accent-strong: #0A6F89;
+  --adm-accent-ink: #FFFFFF;
+  --adm-warn: #B5750F;
+  --adm-danger: #C63B3B;
+  --adm-ok: #21875A;
+}
+
+.admin-theme-root { display: block; min-height: 100dvh; background: var(--adm-bg); }
 .admin-shell { min-height: 100dvh; background: var(--adm-bg); color: var(--adm-text); font-family: 'Plex Sans', sans-serif; }
 
 .admin-sider-brand {
@@ -29,9 +47,11 @@
 .admin-sider-brand b { color: var(--adm-accent); font-weight: 700; }
 
 .admin-header {
-  display: flex; align-items: center; gap: 14px; padding: 0 20px; height: 60px;
+  display: flex; align-items: center; padding: 0 20px; height: 60px;
   background: var(--adm-surface); border-bottom: 1px solid var(--adm-line); position: sticky; top: 0; z-index: 20;
 }
+.admin-collapse-btn { display: none; }
+.admin-header-end { margin-inline-start: auto; }
 .admin-user-chip { padding: 4px 10px 4px 4px; border-radius: 20px; background: var(--adm-surface-2); border: 1px solid var(--adm-line); }
 
 .admin-main { padding: 24px; max-width: 1180px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 20px; }
@@ -118,6 +138,23 @@
 .admin-login-form .ant-input-affix-wrapper,
 .admin-login-form .ant-input {
   font-family: 'Plex Mono', monospace; font-size: 12.5px;
+}
+
+/* Chrome pinta el autofill con su propio fondo (blanco/amarillo) ignorando
+   el tema oscuro de antd — este truco del inset shadow lo tapa. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--adm-text) !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--adm-surface-2) inset !important;
+  box-shadow: 0 0 0px 1000px var(--adm-surface-2) inset !important;
+  caret-color: var(--adm-text);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+@media (max-width: 991px) {
+  .admin-collapse-btn { display: inline-flex; }
 }
 
 @media (max-width: 760px) {
