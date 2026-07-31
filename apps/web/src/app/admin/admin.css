@@ -35,7 +35,7 @@
   --adm-ok: #21875A;
 }
 
-.admin-theme-root { display: block; min-height: 100dvh; background: var(--adm-bg); }
+.admin-theme-root { display: block; min-height: 100dvh; background: var(--adm-bg); color: var(--adm-text); }
 .admin-shell { min-height: 100dvh; background: var(--adm-bg); color: var(--adm-text); font-family: 'Plex Sans', sans-serif; }
 
 .admin-sider-brand {
