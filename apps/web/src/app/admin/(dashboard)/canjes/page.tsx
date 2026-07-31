@@ -1,4 +1,6 @@
-import { RedemptionRow } from '@/components/admin/RedemptionRow'
+import { AdminCard } from '@/components/admin/AdminCard'
+import { PageHeader } from '@/components/admin/PageHeader'
+import { RedemptionsTable } from '@/components/admin/RedemptionsTable'
 import { adminListRedemptions } from '@/lib/api'
 import { getSessionToken } from '@/lib/session'
 
@@ -8,36 +10,14 @@ export default async function AdminRedemptionsPage() {
 
   return (
     <>
-      <div>
-        <div className="admin-page-title">Canjes</div>
-        <div className="admin-page-sub">Solicitudes de dinero real — contactar y transferir por fuera de la plataforma.</div>
-      </div>
-
-      <div className="admin-card">
+      <PageHeader title="Canjes" subtitle="Solicitudes de dinero real — contactar y transferir por fuera de la plataforma." />
+      <AdminCard>
         {redemptions.items.length === 0 ? (
           <div className="admin-empty">Sin solicitudes de canje.</div>
         ) : (
-          <div className="admin-table-wrap">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Usuario</th>
-                  <th>Puntos</th>
-                  <th>Teléfono</th>
-                  <th>Nota</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {redemptions.items.map((r) => (
-                  <RedemptionRow key={r.id} redemption={r} />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <RedemptionsTable redemptions={redemptions.items} />
         )}
-      </div>
+      </AdminCard>
     </>
   )
 }

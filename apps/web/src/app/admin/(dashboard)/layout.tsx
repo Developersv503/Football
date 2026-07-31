@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import { redirect } from 'next/navigation'
 import { AdminShell } from '@/components/admin/AdminShell'
 import { getSession } from '@/lib/session'
-import '../admin.css'
 
 export const dynamic = 'force-dynamic'
 

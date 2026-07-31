@@ -1,6 +1,8 @@
 'use client'
 
 import { useActionState, useState } from 'react'
+import { CheckCircleOutlined, PlayCircleOutlined, ThunderboltOutlined } from '@ant-design/icons'
+import { Alert, Button, Col, Input, InputNumber, Row, Space, Tag } from 'antd'
 import {
   adminEnsureContestAction,
   adminSetRecommendedAction,
@@ -16,6 +18,8 @@ function tiersToText(tiers: { rank: number; points: number }[]): string {
   return tiers.map((t) => `${t.rank}:${t.points}`).join(', ')
 }
 
+const STATUS_COLOR: Record<string, string> = { OPEN: 'green', LOCKED: 'gold', SETTLED: 'default' }
+
 export function ContestConfigForm({ event, contest }: { event: EventCard; contest: MatchContest | null }) {
   const [ensureState, ensureAction, ensurePending] = useActionState(adminEnsureContestAction, initialState)
   const [recState, recAction, recPending] = useActionState(adminSetRecommendedAction, initialState)
@@ -27,56 +31,62 @@ export function ContestConfigForm({ event, contest }: { event: EventCard; contes
     return (
       <form action={ensureAction}>
         <input type="hidden" name="eventId" value={event.id} />
-        <button type="submit" className="admin-btn primary" disabled={ensurePending} onClick={() => setOpen(true)}>
+        <Button type="primary" icon={<PlayCircleOutlined />} htmlType="submit" loading={ensurePending} onClick={() => setOpen(true)}>
           Activar concurso
-        </button>
-        {ensureState.error ? <p className="admin-error">{ensureState.error}</p> : null}
+        </Button>
+        {ensureState.error ? <Alert type="error" message={ensureState.error} showIcon style={{ marginTop: 10 }} /> : null}
       </form>
     )
   }
 
   return (
-    <div className="admin-form-row" style={{ flexWrap: 'wrap', gap: 16 }}>
-      <form action={recAction} className="admin-form" style={{ maxWidth: 220 }}>
-        <input type="hidden" name="eventId" value={event.id} />
-        <label>
-          Recomendado (local-visita)
-          <div className="admin-form-row">
-            <input type="number" name="homeScore" min={0} defaultValue={contest?.recommendedHomeScore ?? 0} />
-            <input type="number" name="awayScore" min={0} defaultValue={contest?.recommendedAwayScore ?? 0} />
-          </div>
-        </label>
-        <button type="submit" className="admin-btn" disabled={recPending}>
-          Guardar recomendado
-        </button>
-        {recState.error ? <p className="admin-error">{recState.error}</p> : null}
-      </form>
+    <Row gutter={[16, 12]} align="top" wrap>
+      <Col xs={24} sm={8}>
+        <form action={recAction}>
+          <input type="hidden" name="eventId" value={event.id} />
+          <div className="admin-field-label">Recomendado (local-visita)</div>
+          <Space size={6}>
+            <InputNumber name="homeScore" min={0} defaultValue={contest?.recommendedHomeScore ?? 0} style={{ width: 68 }} />
+            <InputNumber name="awayScore" min={0} defaultValue={contest?.recommendedAwayScore ?? 0} style={{ width: 68 }} />
+            <Button size="small" htmlType="submit" loading={recPending}>
+              Guardar
+            </Button>
+          </Space>
+          {recState.error ? <Alert type="error" message={recState.error} showIcon banner style={{ marginTop: 6 }} /> : null}
+        </form>
+      </Col>
 
-      <form action={tiersAction} className="admin-form" style={{ maxWidth: 280 }}>
-        <input type="hidden" name="eventId" value={event.id} />
-        <label>
-          Tramos de puntos (rank:puntos)
-          <input type="text" name="tiers" placeholder="1:1200, 2:1000, 3:500" defaultValue={contest ? tiersToText(contest.rewardTiers) : ''} />
-        </label>
-        <button type="submit" className="admin-btn" disabled={tiersPending}>
-          Guardar tramos
-        </button>
-        {tiersState.error ? <p className="admin-error">{tiersState.error}</p> : null}
-      </form>
+      <Col xs={24} sm={10}>
+        <form action={tiersAction}>
+          <input type="hidden" name="eventId" value={event.id} />
+          <div className="admin-field-label">Tramos de puntos (rank:puntos)</div>
+          <Space.Compact style={{ width: '100%' }}>
+            <Input
+              name="tiers"
+              placeholder="1:1200, 2:1000, 3:500"
+              defaultValue={contest ? tiersToText(contest.rewardTiers) : ''}
+            />
+            <Button icon={<ThunderboltOutlined />} htmlType="submit" loading={tiersPending}>
+              Guardar
+            </Button>
+          </Space.Compact>
+          {tiersState.error ? <Alert type="error" message={tiersState.error} showIcon banner style={{ marginTop: 6 }} /> : null}
+        </form>
+      </Col>
 
-      <div className="admin-form" style={{ maxWidth: 160, justifyContent: 'flex-end' }}>
-        <span className={`admin-pill ${contest?.status === 'SETTLED' ? 'muted' : 'ok'}`}>{contest?.status ?? 'OPEN'}</span>
+      <Col xs={24} sm={6} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+        <Tag color={STATUS_COLOR[contest?.status ?? 'OPEN']}>{contest?.status ?? 'OPEN'}</Tag>
         {event.status === 'FINISHED' && contest?.status !== 'SETTLED' ? (
           <form action={settleAction}>
             <input type="hidden" name="eventId" value={event.id} />
-            <button type="submit" className="admin-btn primary" disabled={settlePending}>
+            <Button type="primary" size="small" icon={<CheckCircleOutlined />} htmlType="submit" loading={settlePending}>
               Liquidar ahora
-            </button>
+            </Button>
           </form>
         ) : null}
-        {settleState.ok ? <p className="admin-ok-msg">✓ Liquidado</p> : null}
-        {settleState.error ? <p className="admin-error">{settleState.error}</p> : null}
-      </div>
-    </div>
+        {settleState.ok ? <Alert type="success" message="Liquidado" showIcon banner /> : null}
+        {settleState.error ? <Alert type="error" message={settleState.error} showIcon banner /> : null}
+      </Col>
+    </Row>
   )
 }
