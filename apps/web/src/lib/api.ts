@@ -71,12 +71,15 @@ export type RankingRow = {
   user: { displayName: string }
 }
 
-// Todas las páginas se renderizan en el servidor con `no-store` — los
-// partidos/torneos cambian de estado en segundos (en vivo), cachear acá
-// mostraría marcadores viejos. La API interna es la que decide qué cachear.
-async function apiGet<T>(path: string, token?: string): Promise<T> {
+// Por defecto `no-store` — los partidos en vivo cambian de estado en
+// segundos, cachear acá mostraría marcadores viejos. Los endpoints que NO
+// dependen del filtro de liga (competitions, torneo activo, ranking) pasan
+// `revalidateSeconds` para evitar recargar en frío en cada click del filtro
+// — la API en Hobby tarda ~3s por request fría, y antes se pagaban 2 rondas
+// (Promise.all + el leaderboard secuencial) en cada navegación.
+async function apiGet<T>(path: string, token?: string, revalidateSeconds?: number): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
-    cache: 'no-store',
+    ...(revalidateSeconds ? { next: { revalidate: revalidateSeconds } } : { cache: 'no-store' }),
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   })
   if (!res.ok) throw new Error(`API ${path} -> HTTP ${res.status}`)
@@ -109,7 +112,7 @@ export function getTodayEvents(competitionId?: string) {
 }
 
 export function getCompetitions() {
-  return apiGet<CompetitionOption[]>('/api/competitions')
+  return apiGet<CompetitionOption[]>('/api/competitions', undefined, 20)
 }
 
 export function getMatchDetail(eventId: string) {
@@ -124,16 +127,18 @@ export function getLiveEvents() {
 }
 
 export function getActiveTournament() {
-  return apiGet<CursorPage<TournamentCard>>('/api/tournaments?status=ACTIVE&take=1')
+  return apiGet<CursorPage<TournamentCard>>('/api/tournaments?status=ACTIVE&take=1', undefined, 20)
 }
 
 export function getGlobalRanking(take = 5) {
-  return apiGet<CursorPage<RankingRow>>(`/api/predictor-profiles/ranking?take=${take}`)
+  return apiGet<CursorPage<RankingRow>>(`/api/predictor-profiles/ranking?take=${take}`, undefined, 20)
 }
 
 export function getTournamentLeaderboard(tournamentId: string) {
   return apiGet<CursorPage<{ id: string; score: number; rank: number | null; user: { id: string; displayName: string } }>>(
     `/api/tournaments/${tournamentId}/leaderboard?take=50`,
+    undefined,
+    20,
   )
 }
 

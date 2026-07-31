@@ -12,8 +12,6 @@ import {
 } from '@/lib/api'
 import { getViewer } from '@/lib/viewer'
 
-export const dynamic = 'force-dynamic'
-
 const SPORT_TABS = [
   { emoji: '⚽', label: 'Fútbol', active: true },
   { emoji: '🏒', label: 'Hockey', active: false },
