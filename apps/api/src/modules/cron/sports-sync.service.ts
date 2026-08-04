@@ -2,6 +2,11 @@ import { Inject, Injectable, Logger } from '@nestjs/common'
 import type { PrismaClient } from '@pronostico/db'
 import { PRISMA } from '../../infrastructure/prisma/prisma.module'
 import { getEnv } from '../../config/env'
+import {
+  fetchGoalserveOddsForDate,
+  normalizeTeamName,
+  toGoalserveDate,
+} from './providers/goalserve-odds.provider'
 
 const STATUS_MAP: Record<string, 'SCHEDULED' | 'LIVE' | 'FINISHED' | 'POSTPONED' | 'CANCELLED'> = {
   not_started: 'SCHEDULED',
@@ -41,11 +46,15 @@ export class SportsSyncService {
 
   constructor(@Inject(PRISMA) private readonly prisma: PrismaClient) {}
 
-  async syncToday(): Promise<{ synced: number; competitions: number }> {
+  async syncToday(): Promise<{
+    synced: number
+    competitions: number
+    odds: { matched: number; unmatched: number }
+  }> {
     const apiKey = getEnv().SPORTRADAR_API_KEY
     if (!apiKey) {
       this.logger.warn('SPORTRADAR_API_KEY no configurada — se salta el sync.')
-      return { synced: 0, competitions: 0 }
+      return { synced: 0, competitions: 0, odds: { matched: 0, unmatched: 0 } }
     }
 
     // El trial de Sportradar es 1 QPS — pedir estos dos (y el catálogo del
@@ -105,7 +114,89 @@ export class SportsSyncService {
 
     this.logger.log(`Sync: ${synced} eventos en ${competitionCache.size} competiciones.`)
     await this.backfillMissingCountries(apiKey)
-    return { synced, competitions: competitionCache.size }
+
+    const odds = await this.syncGoalserveOdds()
+
+    return { synced, competitions: competitionCache.size, odds }
+  }
+
+  /**
+   * Goalserve y Sportradar no comparten ids — matchea por nombre de equipo
+   * normalizado + fecha del feed (mismo formato DD.MM.YYYY en ambos lados).
+   * Si no matchea, se descarta esa fila de odds y se cuenta en `unmatched`
+   * (visible en el log — señal de que el matching por nombre necesita ajuste,
+   * no un fallo silencioso).
+   */
+  private async syncGoalserveOdds(): Promise<{ matched: number; unmatched: number }> {
+    const apiKey = getEnv().GOALSERVE_API_KEY
+    if (!apiKey) {
+      this.logger.warn('GOALSERVE_API_KEY no configurada — se salta el sync de odds.')
+      return { matched: 0, unmatched: 0 }
+    }
+
+    const today = new Date()
+    const dateKey = toGoalserveDate(today)
+
+    let oddsMatches: Awaited<ReturnType<typeof fetchGoalserveOddsForDate>>
+    try {
+      oddsMatches = await fetchGoalserveOddsForDate(apiKey, dateKey)
+    } catch (err) {
+      this.logger.warn(`No se pudo traer odds de Goalserve: ${(err as Error).message}`)
+      return { matched: 0, unmatched: 0 }
+    }
+
+    const dayStart = new Date(today)
+    dayStart.setHours(0, 0, 0, 0)
+    const dayEnd = new Date(dayStart)
+    dayEnd.setDate(dayEnd.getDate() + 1)
+
+    const todayEvents = await this.prisma.event.findMany({
+      where: { startTime: { gte: dayStart, lt: dayEnd } },
+      select: { id: true, homeTeam: true, awayTeam: true },
+    })
+
+    const eventByKey = new Map<string, { id: string }>()
+    for (const event of todayEvents) {
+      const key = `${normalizeTeamName(event.homeTeam)}|${normalizeTeamName(event.awayTeam)}`
+      eventByKey.set(key, event)
+    }
+
+    let matched = 0
+    let unmatched = 0
+
+    for (const oddsMatch of oddsMatches) {
+      const key = `${normalizeTeamName(oddsMatch.homeTeamRaw)}|${normalizeTeamName(oddsMatch.awayTeamRaw)}`
+      const event = eventByKey.get(key)
+      if (!event) {
+        unmatched += 1
+        continue
+      }
+
+      await this.prisma.event.update({
+        where: { id: event.id },
+        data: { goalserveId: oddsMatch.goalserveId },
+      })
+
+      for (const bm of oddsMatch.bookmakers) {
+        if (!bm.home || !bm.draw || !bm.away) continue
+        await this.prisma.odds.upsert({
+          where: { eventId_bookmaker_market: { eventId: event.id, bookmaker: bm.bookmaker, market: '1x2' } },
+          update: { homeOdds: bm.home, drawOdds: bm.draw, awayOdds: bm.away },
+          create: {
+            eventId: event.id,
+            bookmaker: bm.bookmaker,
+            market: '1x2',
+            homeOdds: bm.home,
+            drawOdds: bm.draw,
+            awayOdds: bm.away,
+          },
+        })
+      }
+      matched += 1
+    }
+
+    this.logger.log(`Odds Goalserve: ${matched} partidos matcheados, ${unmatched} sin match.`)
+    return { matched, unmatched }
   }
 
   /**

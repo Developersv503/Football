@@ -21,6 +21,7 @@ const envSchema = z.object({
   DOCS_API_KEY: z.string().min(16).optional(),
 
   SPORTRADAR_API_KEY: z.string().optional(),
+  GOALSERVE_API_KEY: z.string().optional(),
   CRON_SECRET: z.string().min(16).optional(),
 })
 

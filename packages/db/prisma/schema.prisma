@@ -59,6 +59,10 @@ enum EventStatus {
 model Event {
   id               String      @id @default(cuid())
   sportradarId     String      @unique
+  // Id del mismo partido en el feed de Goalserve (fix_id) — se completa al
+  // matchear por nombre de equipo+fecha durante el sync de odds, ya que
+  // Goalserve y Sportradar no comparten ids. Null hasta que haya match.
+  goalserveId      String?     @unique
   sportId          String
   sport            Sport       @relation(fields: [sportId], references: [id])
   competitionId    String
